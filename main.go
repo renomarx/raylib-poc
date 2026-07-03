@@ -28,10 +28,10 @@ func main() {
 
 	// Define the camera to look into our 3d world
 	camera := rl.Camera{}
-	camera.Position = rl.NewVector3(0.2, 2.0, 0.2)
-	camera.Target = rl.NewVector3(1.0, 0.5, 1.0)
+	camera.Position = rl.NewVector3(0.8, 1.2, 0.8)
+	camera.Target = rl.NewVector3(2, 0.5, 2)
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
-	camera.Fovy = 45.0
+	camera.Fovy = 75.0
 	camera.Projection = rl.CameraPerspective
 
 	imMap := rl.LoadImage("cubicmap.png")      // Load cubicmap image (RAM)
@@ -53,6 +53,7 @@ func main() {
 	rl.DisableCursor() // Locking the cursor to enable camera control with mouse
 
 	playerModel := rl.LoadModel("robot.glb")
+	playerInitialRot := float32(rl.Deg2rad * 90)
 
 	// animIndex := 0
 	// animCurrentFrame := 0
@@ -61,7 +62,6 @@ func main() {
 
 	//--------------------------------------------------------------------------------------
 
-	var playerRot float32 = 0.0
 	// Main game loop
 	for !rl.WindowShouldClose() { // Detect window close button or ESC key
 		// Update
@@ -69,8 +69,7 @@ func main() {
 		oldCamPos := camera.Position // Store old camera position
 
 		playerPos := camera.Target
-		playerPos.Y = playerPos.Y - 0.5 // size of the player
-		oldPlayerPos := playerPos
+		playerPos.Y = playerPos.Y - 0.5 // mid-size of the player
 
 		// TODO: use a custom camera mode; the ThirdPerson is good for a poc,
 		// but lacks customization (invert Y-axis as example)
@@ -80,9 +79,9 @@ func main() {
 		playerPos2 := rl.NewVector2(playerPos.X, playerPos.Z)
 		playerRadius := 0.1 // Collision radius (player is modelled as a cylinder for collision)
 
-		playerRot += rl.Vector3Angle(oldCamPos, camera.Position) * 100
+		playerRot := playerInitialRot + rl.Vector2LineAngle(rl.Vector2{X: camera.Position.X, Y: camera.Position.Z}, playerPos2)
 		log.Printf("Camera rotation: %f", playerRot)
-		playerModel.Transform = rl.MatrixRotateXYZ(rl.Vector3{X: 0, Y: rl.Deg2rad * playerRot, Z: 0})
+		playerModel.Transform = rl.MatrixRotateY(playerRot)
 
 		playerCellX := (int)(playerPos2.X - mapPosition.X + 0.5)
 		playerCellY := (int)(playerPos2.Y - mapPosition.Z + 0.5)
@@ -112,7 +111,6 @@ func main() {
 				if mapPixels[y*int(cubicmap.Width)+x].R == 255 && (rl.CheckCollisionCircleRec(playerPos2, float32(playerRadius), rl.NewRectangle(float32(mapPosition.X-0.5+float32(x)), float32(mapPosition.Z-0.5+float32(y)), 1.0, 1.0))) {
 					// Collision detected, reset camera position
 					camera.Position = oldCamPos
-					playerPos = oldPlayerPos
 				}
 			}
 		}
