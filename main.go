@@ -67,16 +67,16 @@ func main() {
 		oldCamPos := camera.Position  // Store old camera position
 		oldCamTarget := camera.Target // Store old camera target position
 
-		playerPos := camera.Target
-		playerPos.Y = playerPos.Y - 0.5 // mid-size of the player
-
 		// TODO: use a custom camera mode; the ThirdPerson is good for a poc,
 		// but lacks customization (invert Y-axis as example)
 		rl.UpdateCamera(&camera, rl.CameraThirdPerson)
 
+		playerPos := camera.Target
+		playerPos.Y = playerPos.Y - 0.5 // mid-size of the player
+
 		// Check player collision (we simplify to 2D collision detection)
 		playerPos2 := rl.NewVector2(playerPos.X, playerPos.Z)
-		playerRadius := 0.2 // Collision radius (player is modelled as a cylinder for collision)
+		playerRadius := 0.3 // Collision radius (player is modelled as a cylinder for collision)
 
 		playerRot := playerInitialRot + rl.Vector2LineAngle(rl.Vector2{X: camera.Position.X, Y: camera.Position.Z}, playerPos2)
 		playerModel.Transform = rl.MatrixRotateY(playerRot)
@@ -99,10 +99,10 @@ func main() {
 
 		// Check map collisions using image data and player position
 		// (just check player surrounding cells for collision)
-		minYsurrounding := max(playerCellY-10, 0)
-		maxYsurrounding := min(playerCellY+10, int(cubicmap.Height))
-		minXsurrounding := max(playerCellX-10, 0)
-		maxXsurrounding := min(playerCellX+10, int(cubicmap.Width))
+		minYsurrounding := max(playerCellY-2, 0)
+		maxYsurrounding := min(playerCellY+2, int(cubicmap.Height))
+		minXsurrounding := max(playerCellX-2, 0)
+		maxXsurrounding := min(playerCellX+2, int(cubicmap.Width))
 		for y := minYsurrounding; y < maxYsurrounding; y++ {
 			for x := minXsurrounding; x < maxXsurrounding; x++ {
 				// Collision: white pixel, only check R channel
