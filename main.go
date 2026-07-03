@@ -13,8 +13,6 @@
 package main
 
 import (
-	"log"
-
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -28,8 +26,8 @@ func main() {
 
 	// Define the camera to look into our 3d world
 	camera := rl.Camera{}
-	camera.Position = rl.NewVector3(0.8, 1.2, 0.8)
-	camera.Target = rl.NewVector3(2, 0.5, 2)
+	camera.Position = rl.NewVector3(0, 1.2, 0)
+	camera.Target = rl.NewVector3(-0.8, 0.5, -0.8)
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 75.0
 	camera.Projection = rl.CameraPerspective
@@ -66,7 +64,8 @@ func main() {
 	for !rl.WindowShouldClose() { // Detect window close button or ESC key
 		// Update
 		//----------------------------------------------------------------------------------
-		oldCamPos := camera.Position // Store old camera position
+		oldCamPos := camera.Position  // Store old camera position
+		oldCamTarget := camera.Target // Store old camera target position
 
 		playerPos := camera.Target
 		playerPos.Y = playerPos.Y - 0.5 // mid-size of the player
@@ -77,10 +76,9 @@ func main() {
 
 		// Check player collision (we simplify to 2D collision detection)
 		playerPos2 := rl.NewVector2(playerPos.X, playerPos.Z)
-		playerRadius := 0.1 // Collision radius (player is modelled as a cylinder for collision)
+		playerRadius := 0.2 // Collision radius (player is modelled as a cylinder for collision)
 
 		playerRot := playerInitialRot + rl.Vector2LineAngle(rl.Vector2{X: camera.Position.X, Y: camera.Position.Z}, playerPos2)
-		log.Printf("Camera rotation: %f", playerRot)
 		playerModel.Transform = rl.MatrixRotateY(playerRot)
 
 		playerCellX := (int)(playerPos2.X - mapPosition.X + 0.5)
@@ -100,7 +98,7 @@ func main() {
 		}
 
 		// Check map collisions using image data and player position
-		// Improvement: Just check player surrounding cells for collision
+		// (just check player surrounding cells for collision)
 		minYsurrounding := max(playerCellY-10, 0)
 		maxYsurrounding := min(playerCellY+10, int(cubicmap.Height))
 		minXsurrounding := max(playerCellX-10, 0)
@@ -111,9 +109,11 @@ func main() {
 				if mapPixels[y*int(cubicmap.Width)+x].R == 255 && (rl.CheckCollisionCircleRec(playerPos2, float32(playerRadius), rl.NewRectangle(float32(mapPosition.X-0.5+float32(x)), float32(mapPosition.Z-0.5+float32(y)), 1.0, 1.0))) {
 					// Collision detected, reset camera position
 					camera.Position = oldCamPos
+					camera.Target = oldCamTarget
 				}
 			}
 		}
+
 		//----------------------------------------------------------------------------------
 		// Draw
 		//----------------------------------------------------------------------------------
