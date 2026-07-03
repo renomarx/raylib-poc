@@ -13,6 +13,8 @@
 package main
 
 import (
+	"log"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -70,13 +72,16 @@ func main() {
 		playerPos.Y = playerPos.Y - 0.5 // size of the player
 		oldPlayerPos := playerPos
 
-		rl.UpdateCamera(&camera, rl.CameraThirdPerson) // Update camera with first person mode
+		// TODO: use a custom camera mode; the ThirdPerson is good for a poc,
+		// but lacks customization (invert Y-axis as example)
+		rl.UpdateCamera(&camera, rl.CameraThirdPerson)
 
 		// Check player collision (we simplify to 2D collision detection)
 		playerPos2 := rl.NewVector2(playerPos.X, playerPos.Z)
 		playerRadius := 0.1 // Collision radius (player is modelled as a cylinder for collision)
 
-		playerRot += 0.1 // TODO: handle from camera rotation
+		playerRot += rl.Vector3Angle(oldCamPos, camera.Position) * 100
+		log.Printf("Camera rotation: %f", playerRot)
 		playerModel.Transform = rl.MatrixRotateXYZ(rl.Vector3{X: 0, Y: rl.Deg2rad * playerRot, Z: 0})
 
 		playerCellX := (int)(playerPos2.X - mapPosition.X + 0.5)
