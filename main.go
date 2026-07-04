@@ -53,6 +53,11 @@ func main() {
 	playerModel := rl.LoadModel("robot.glb")
 	playerInitialRot := float32(rl.Deg2rad * 90)
 
+	animIndex := 0
+	animCurrentFrame := 0
+
+	modelAnims := rl.LoadModelAnimations("robot.glb")
+
 	// animIndex := 0
 	// animCurrentFrame := 0
 
@@ -113,6 +118,16 @@ func main() {
 				}
 			}
 		}
+
+		if rl.IsKeyDown(rl.KeyW) { // TODO: handle proper keyboard
+			animIndex = 6 // Index of animation: Running
+		} else {
+			animIndex = 2 // Index of animation: Idle
+		}
+
+		animPlaying := modelAnims[animIndex]
+		animCurrentFrame = (animCurrentFrame + 1) % int(animPlaying.KeyframeCount)
+		rl.UpdateModelAnimation(playerModel, animPlaying, float32(animCurrentFrame))
 
 		//----------------------------------------------------------------------------------
 		// Draw
