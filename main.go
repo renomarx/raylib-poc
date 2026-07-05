@@ -53,15 +53,16 @@ func main() {
 	playerModel := rl.LoadModel("robot.glb")
 	playerInitialRot := float32(rl.Deg2rad * 90)
 
-	animIndex := 0
-	animCurrentFrame := 0
+	monsterModel := rl.LoadModel("robot.glb")
+	monsterPos := rl.NewVector3(-14, 0, -6)
 
-	modelAnims := rl.LoadModelAnimations("robot.glb")
+	playerAnimIndex := 0
+	playerAnimCurrentFrame := 0
 
-	// animIndex := 0
-	// animCurrentFrame := 0
+	robotAnims := rl.LoadModelAnimations("robot.glb")
 
-	// modelAnims := rl.LoadModelAnimations("robot.glb")
+	monsterAnimIndex := 0 // Dancing
+	monsterAnimCurrentFrame := 0
 
 	//--------------------------------------------------------------------------------------
 
@@ -120,14 +121,18 @@ func main() {
 		}
 
 		if rl.IsKeyDown(rl.KeyW) { // TODO: handle proper keyboard
-			animIndex = 6 // Index of animation: Running
+			playerAnimIndex = 6 // Index of animation: Running
 		} else {
-			animIndex = 2 // Index of animation: Idle
+			playerAnimIndex = 2 // Index of animation: Idle
 		}
 
-		animPlaying := modelAnims[animIndex]
-		animCurrentFrame = (animCurrentFrame + 1) % int(animPlaying.KeyframeCount)
-		rl.UpdateModelAnimation(playerModel, animPlaying, float32(animCurrentFrame))
+		playerAnimPlaying := robotAnims[playerAnimIndex]
+		playerAnimCurrentFrame = (playerAnimCurrentFrame + 1) % int(playerAnimPlaying.KeyframeCount)
+		rl.UpdateModelAnimation(playerModel, playerAnimPlaying, float32(playerAnimCurrentFrame))
+
+		monsterAnimPlaying := robotAnims[monsterAnimIndex] // Dance
+		monsterAnimCurrentFrame = (monsterAnimCurrentFrame + 1) % int(monsterAnimPlaying.KeyframeCount)
+		rl.UpdateModelAnimation(monsterModel, monsterAnimPlaying, float32(monsterAnimCurrentFrame))
 
 		//----------------------------------------------------------------------------------
 		// Draw
@@ -138,6 +143,8 @@ func main() {
 		rl.DrawModel(model, mapPosition, 1.0, rl.White) // Draw maze map
 
 		rl.DrawModel(playerModel, playerPos, 0.2, rl.White) // Draw robot player
+
+		rl.DrawModel(monsterModel, monsterPos, 0.2, rl.White) // Draw robot monster
 
 		rl.EndMode3D()
 		rl.DrawTextureEx(cubicmap, rl.NewVector2(float32(rl.GetScreenWidth())-float32(cubicmap.Width)*4.0-20, 20.0), 0.0, 4.0, rl.White)
