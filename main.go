@@ -13,6 +13,8 @@
 package main
 
 import (
+	"math"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -63,6 +65,7 @@ func main() {
 
 	monsterAnimIndex := 0 // Dancing
 	monsterAnimCurrentFrame := 0
+	monsterDead := false
 
 	//--------------------------------------------------------------------------------------
 
@@ -120,9 +123,30 @@ func main() {
 			}
 		}
 
-		if rl.IsKeyDown(rl.KeyW) { // TODO: handle proper keyboard
+		// Monster collision detection
+		monsterRadius := 0.3
+		if math.Abs(float64(monsterPos.X-playerPos.X)) < playerRadius+monsterRadius && math.Abs(float64(monsterPos.Z-playerPos.Z)) < playerRadius+monsterRadius {
+			// Collision detected, reset camera position
+			camera.Position = oldCamPos
+			camera.Target = oldCamTarget
+		}
+
+		// Player <-> monster interactions
+		if math.Abs(float64(monsterPos.X-playerPos.X)) < playerRadius*2+monsterRadius && math.Abs(float64(monsterPos.Z-playerPos.Z)) < playerRadius*2+monsterRadius {
+			// if player is punching the monster, it dies (if not already dead)
+			if rl.IsKeyDown(rl.KeyR) && !monsterDead && isPointTargeted(camera, monsterPos) {
+				monsterDead = true
+				monsterAnimCurrentFrame = 0
+				monsterAnimIndex = 1 // Die
+			}
+		}
+
+		switch {
+		case rl.IsKeyDown(rl.KeyW):
 			playerAnimIndex = 6 // Index of animation: Running
-		} else {
+		case rl.IsKeyDown(rl.KeyR):
+			playerAnimIndex = 5 // Index of animation: Punch
+		default:
 			playerAnimIndex = 2 // Index of animation: Idle
 		}
 
@@ -130,8 +154,13 @@ func main() {
 		playerAnimCurrentFrame = (playerAnimCurrentFrame + 1) % int(playerAnimPlaying.KeyframeCount)
 		rl.UpdateModelAnimation(playerModel, playerAnimPlaying, float32(playerAnimCurrentFrame))
 
-		monsterAnimPlaying := robotAnims[monsterAnimIndex] // Dance
-		monsterAnimCurrentFrame = (monsterAnimCurrentFrame + 1) % int(monsterAnimPlaying.KeyframeCount)
+		monsterAnimPlaying := robotAnims[monsterAnimIndex]
+		switch {
+		case monsterDead:
+			monsterAnimCurrentFrame = min(monsterAnimCurrentFrame+1, int(monsterAnimPlaying.KeyframeCount)-1)
+		default:
+			monsterAnimCurrentFrame = (monsterAnimCurrentFrame + 1) % int(monsterAnimPlaying.KeyframeCount)
+		}
 		rl.UpdateModelAnimation(monsterModel, monsterAnimPlaying, float32(monsterAnimCurrentFrame))
 
 		//----------------------------------------------------------------------------------
@@ -165,4 +194,17 @@ func main() {
 	rl.UnloadModel(model)      // Unload map model
 	rl.CloseWindow()           // Close window and OpenGL context
 	//--------------------------------------------------------------------------------------
+}
+
+func isPointTargeted(camera rl.Camera, pos rl.Vector3) bool {
+	camPos := rl.Vector2{X: camera.Position.X, Y: camera.Position.Z}
+	camTarget := rl.Vector2{X: camera.Target.X, Y: camera.Target.Z}
+	pos2 := rl.Vector2{X: pos.X, Y: pos.Z}
+
+	// Calculate angle between two vectors, considering a common origin (camTarget)
+	v1Normal := rl.Vector2Normalize(rl.Vector2Subtract(camPos, camTarget))
+	v2Normal := rl.Vector2Normalize(rl.Vector2Subtract(pos2, camTarget))
+	angle := rl.Vector2Angle(v1Normal, v2Normal) * rl.Rad2deg
+
+	return angle+30 >= 180 || angle-30 <= -180 // Aligned +- 30°
 }
