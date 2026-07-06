@@ -13,6 +13,7 @@
 package main
 
 import (
+	"image/color"
 	"math"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -57,6 +58,12 @@ func main() {
 
 	monsterModel := rl.LoadModel("robot.glb")
 	monsterPos := rl.NewVector3(-14, 0, -6)
+	monster := Monster{
+		cubicmap:    cubicmap,
+		mapPosition: mapPosition,
+		mapPixels:   mapPixels,
+	}
+	monsterInitialRot := float32(rl.Deg2rad * 90)
 
 	playerAnimIndex := 0
 	playerAnimCurrentFrame := 0
@@ -120,6 +127,24 @@ func main() {
 					camera.Position = oldCamPos
 					camera.Target = oldCamTarget
 				}
+			}
+		}
+
+		// Monster IA
+		if !monsterDead {
+			monster.Position = rl.Vector2{X: monsterPos.X, Y: monsterPos.Z}
+			pathToPlayer := astar(monster.Position, playerPos2, &monster)
+			if len(pathToPlayer) > 1 {
+				// Rotating into wanted direction
+				monsterRot := monsterInitialRot + rl.Vector2LineAngle(monster.Position, pathToPlayer[1])
+				monsterModel.Transform = rl.MatrixRotateY(monsterRot)
+				// Moving to direction
+				monster.Position = monster.Position.MoveTowards(pathToPlayer[1], 0.1)
+				monsterPos = rl.Vector3{X: monster.Position.X, Y: monsterPos.Y, Z: monster.Position.Y}
+				// Running
+				monsterAnimIndex = 6 // Running
+			} else {
+				monsterAnimIndex = 0 // Dancing
 			}
 		}
 
@@ -207,4 +232,27 @@ func isPointTargeted(camera rl.Camera, pos rl.Vector3) bool {
 	angle := rl.Vector2Angle(v1Normal, v2Normal) * rl.Rad2deg
 
 	return angle+30 >= 180 || angle-30 <= -180 // Aligned +- 30°
+}
+
+type Monster struct {
+	cubicmap    rl.Texture2D
+	mapPosition rl.Vector3
+	mapPixels   []color.RGBA
+	Position    rl.Vector2
+}
+
+func (m *Monster) CanSee(pos rl.Vector2) bool {
+	x := (int)(pos.X - m.mapPosition.X + 0.5)
+	y := (int)(pos.Y - m.mapPosition.Z + 0.5)
+
+	// Out-of-limits security check
+	if x < 0 || x >= int(m.cubicmap.Width) {
+		return false
+	}
+
+	if y < 0 || y >= int(m.cubicmap.Height) {
+		return false
+	}
+
+	return m.mapPixels[y*int(m.cubicmap.Width)+x].R != 255
 }
