@@ -2,6 +2,8 @@
 
 ## Install & run
 
+- Eventually follow the requirements for raylib-go: https://github.com/gen2brain/raylib-go
+
 - Install go: https://go.dev/doc/install
 
 - Run:
