@@ -12,4 +12,12 @@
 go run main.go
 ```
 
-(Press Esc to escape the game)
+## Play
+
+- Use ZQSD to move (AZERTY keyboard)
+
+- Use directional arrows or mouse to move the camera
+
+- Press Esc to escape the game
+
+- Press "R" to punch

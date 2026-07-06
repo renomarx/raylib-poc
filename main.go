@@ -25,7 +25,7 @@ func main() {
 	var screenWidth int32 = 800
 	var screenHeight int32 = 450
 
-	rl.InitWindow(screenWidth, screenHeight, "raylib [models] example - first person maze")
+	rl.InitWindow(screenWidth, screenHeight, "Killing dancer stalker")
 
 	// Define the camera to look into our 3d world
 	camera := rl.Camera{}
